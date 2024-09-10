@@ -2,19 +2,21 @@ const buildFiles = [];
 const staticFiles = [
   'sw-registration.js',
   'index.js',
+  'index.html',
+  'manifest.json',
 ];
 const routes = [
   '/',
   '/about',
 ]
 const filesToCache = [
+  ...routes,
   ...buildFiles,
   ...staticFiles,
-  ...routes,
 ];
 
 
-const version = 18;
+const version = 71;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -36,9 +38,23 @@ const prepareCachesForUpdate = async () => {
     return null;
   }
 
+  // console.log('latestCacheName', latestCacheName);
+  // console.log('outdatedCacheNames', outdatedCacheNames);
+
   const latestCache = await caches.open(latestCacheName);
+
+  // console.log('latestCache', latestCache);
+
   const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
-  const latestCacheIndexEntry = latestCacheEntries?.find(url => new URL(url).pathname === '/');
+
+  // console.log('latestCacheEntries', await latestCache?.keys());
+
+  const latestCacheIndexEntry = latestCacheEntries?.find(url => {
+    // console.log('entry', url, new URL(url));
+    return new URL(url).pathname === '/';
+  });
+  // console.log('latestCacheIndexEntry', latestCacheIndexEntry);
+
   const latestCacheIndexResponse = latestCacheIndexEntry ? await latestCache.match(latestCacheIndexEntry) : null;
 
   const latestCacheOtherEntries = latestCacheEntries.filter(url => url !== latestCacheIndexEntry) || [];
@@ -50,6 +66,7 @@ const prepareCachesForUpdate = async () => {
       const outdatedCacheIndexEntry = outdatedCacheEntries?.find(url => new URL(url).pathname === '/');
 
       if(outdatedCacheIndexEntry && latestCacheIndexResponse) {
+        // console.log('put new version of the index.html in the cache', outdatedCacheName);
         await outdatedCache.put(outdatedCacheIndexEntry, latestCacheIndexResponse.clone());
       }
 
@@ -79,32 +96,31 @@ const installHandler = e => {
 };
 
 const activateHandler = e => {
-  // e.waitUntil(
-  //   caches.keys()
-  //   .then(names => Promise.all(
-  //     names
-  //     .filter(name => name !== cacheName)
-  //     .map(name => caches.delete(name))
-  //   ))
-  // );
+  e.waitUntil(
+    caches.keys()
+    .then(names => Promise.all(
+      names
+      .filter(name => name !== cacheName)
+      .map(name => caches.delete(name))
+    ))
+  );
 };
 
 const fetchHandler = async e => {
   const {request} = e;
   const {url, method, headers, mode, credentials, cache} = request;
 
-  if(url.includes('google')) {
-    return false;
-  }
-
   log('[Service Worker] Fetch', url, request.method);
 
   e.respondWith(
     caches.match(request, {ignoreVary: true, ignoreSearch: true})
-    .then(response => {
+    .then(async response => {
       if(response) {
-        log('from cache', url, request);
+        log('from cache', url);
 
+        if(url === 'https://localhost:9000/?source=pwa') {
+          log('response from cache', await response.clone().text());
+        }
         return response;
       }
 

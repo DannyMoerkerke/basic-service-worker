@@ -20,7 +20,6 @@ const init = async () => {
   });
 
   document.addEventListener('visibilitychange', () => {
-    console.log('visibilitychange', document.visibilityState);
     localStorage.setItem(document.visibilityState, getTime());
   })
 }

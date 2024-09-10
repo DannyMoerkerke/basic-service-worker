@@ -19,8 +19,11 @@ if('serviceWorker' in navigator) {
             console.log('new sw installed');
             window.swUpdate = true;
 
+            setTimeout(async () => {
+
             await SWHelper.prepareCachesForUpdate();
             await SWHelper.skipWaiting();
+            }, 250)
           }
         };
       }
