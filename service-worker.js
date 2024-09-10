@@ -1,18 +1,24 @@
 const buildFiles = [];
-
-const staticFiles = [];
-
+const staticFiles = [
+  'sw-registration.js',
+  'index.js',
+];
+const routes = [
+  '/',
+  '/about',
+]
 const filesToCache = [
   ...buildFiles,
   ...staticFiles,
+  ...routes,
 ];
 
 
-const version = 1;
+const version = 18;
 
 const cacheName = `web-app-cache-${version}`;
 
-const debug = false;
+const debug = true;
 
 const log = debug ? console.log.bind(console) : () => {};
 
@@ -30,33 +36,33 @@ const prepareCachesForUpdate = async () => {
     return null;
   }
 
-  const latestCache = await caches?.open(latestCacheName);
-  const latestCacheKeys = (await latestCache?.keys())?.map(c => c.url) || [];
-  const latestCacheMainKey = latestCacheKeys?.find(url => url.includes('/index.html'));
-  const latestCacheMainKeyResponse = latestCacheMainKey ? await latestCache.match(latestCacheMainKey) : null;
+  const latestCache = await caches.open(latestCacheName);
+  const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
+  const latestCacheIndexEntry = latestCacheEntries?.find(url => new URL(url).pathname === '/');
+  const latestCacheIndexResponse = latestCacheIndexEntry ? await latestCache.match(latestCacheIndexEntry) : null;
 
-  const latestCacheOtherKeys = latestCacheKeys.filter(url => url !== latestCacheMainKey) || [];
+  const latestCacheOtherEntries = latestCacheEntries.filter(url => url !== latestCacheIndexEntry) || [];
 
-  const cachePromises = outdatedCacheNames.map(cacheName => {
-    const getCacheDone = async () => {
-      const cache = await caches?.open(cacheName);
-      const cacheKeys = (await cache?.keys())?.map(c => c.url) || [];
-      const cacheMainKey = cacheKeys?.find(url => url.includes('/index.html'));
+  const promises = outdatedCacheNames.map(outdatedCacheName => {
+    const updateOutdatedCache = async () => {
+      const outdatedCache = await caches.open(outdatedCacheName);
+      const outdatedCacheEntries = (await outdatedCache?.keys())?.map(c => c.url) || [];
+      const outdatedCacheIndexEntry = outdatedCacheEntries?.find(url => new URL(url).pathname === '/');
 
-      if(cacheMainKey && latestCacheMainKeyResponse) {
-        await cache.put(cacheMainKey, latestCacheMainKeyResponse.clone());
+      if(outdatedCacheIndexEntry && latestCacheIndexResponse) {
+        await outdatedCache.put(outdatedCacheIndexEntry, latestCacheIndexResponse.clone());
       }
 
       return Promise.all(
-        latestCacheOtherKeys
-        .filter(key => !cacheKeys.includes(key))
-        .map(url => cache.add(url).catch(r => console.error(r))),
+        latestCacheOtherEntries
+        .filter(key => !outdatedCacheEntries.includes(key))
+        .map(url => outdatedCache.add(url).catch(r => console.error(r))),
       );
     };
-    return getCacheDone();
+    return updateOutdatedCache();
   });
 
-  return Promise.all(cachePromises);
+  return Promise.all(promises);
 };
 
 const installHandler = e => {
@@ -73,14 +79,14 @@ const installHandler = e => {
 };
 
 const activateHandler = e => {
-  e.waitUntil(
-    caches.keys()
-    .then(names => Promise.all(
-      names
-      .filter(name => name !== cacheName)
-      .map(name => caches.delete(name))
-    ))
-  );
+  // e.waitUntil(
+  //   caches.keys()
+  //   .then(names => Promise.all(
+  //     names
+  //     .filter(name => name !== cacheName)
+  //     .map(name => caches.delete(name))
+  //   ))
+  // );
 };
 
 const fetchHandler = async e => {
@@ -146,14 +152,6 @@ const messageHandler = async ({data}) => {
   const {type} = data;
 
   switch(type) {
-    case 'clearBadges':
-      self.numBadges = 0;
-      if('clearAppBadge' in navigator) {
-        navigator.clearAppBadge();
-      }
-
-      break;
-
     case 'SKIP_WAITING':
       const clients = await self.clients.matchAll({
         includeUncontrolled: true,

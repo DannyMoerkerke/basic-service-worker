@@ -2,8 +2,9 @@ if('serviceWorker' in navigator) {
   const registerServiceWorker = async () => {
     await navigator.serviceWorker.register('/service-worker.js');
     const registration = await navigator.serviceWorker.ready;
+    const newServiceWorkerWaiting = registration.waiting && registration.active
 
-    if(registration.waiting && registration.active) {
+    if(newServiceWorkerWaiting) {
       console.log('new sw waiting');
       window.swUpdate = true;
     }
@@ -31,7 +32,7 @@ if('serviceWorker' in navigator) {
 
   const SWHelper = {
     async getWaitingWorker() {
-      const registrations = await navigator?.serviceWorker?.getRegistrations() || [];
+      const registrations = await navigator.serviceWorker?.getRegistrations() || [];
       const registrationWithWaiting = registrations.find(reg => reg.waiting);
       return registrationWithWaiting?.waiting;
     },
@@ -45,10 +46,13 @@ if('serviceWorker' in navigator) {
     }
   };
 
-  window.addEventListener('beforeunload', async () => {
+  const updateServiceWorkerIfNeeded = async () => {
     if(window.swUpdate) {
       console.log('send skipWaiting');
       await SWHelper.skipWaiting();
     }
-  });
+  }
+
+  window.addEventListener('beforeunload', updateServiceWorkerIfNeeded);
+  document.addEventListener('pagehide', updateServiceWorkerIfNeeded);
 }
