@@ -9,7 +9,8 @@
     "private-key": "openssl genrsa -out ssl/private-key.pem 2048",
     "req-cert": "openssl req -new -nodes -sha256 -key ssl/private-key.pem -out ssl/localhost-csr.pem -config ssl/openssl.cnf",
     "sign-cert": "openssl x509 -req -sha256 -days 3650 -in ssl/localhost-csr.pem -signkey ssl/private-key.pem -out ssl/localhost-cert.pem -extfile ssl/openssl.cnf -extensions v3_req",
-    "generate-cert": "npm run private-key && npm run req-cert && npm run sign-cert"
+    "generate-cert": "npm run private-key && npm run req-cert && npm run sign-cert",
+    "build": "mkdir -p dist && cp service-worker.js dist/service-worker.js && cp sw-registration.js dist/sw-registration.js && cp manifest.json dist/manifest.json && cp index.html dist/index.html && cp index.js dist/index.js && cp -r src dist/src && cp -r about dist/about"
   },
   "repository": {
     "type": "git",
