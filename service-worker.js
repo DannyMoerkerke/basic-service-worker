@@ -17,7 +17,7 @@ const filesToCache = [
 ];
 
 
-const version = 162;
+const version = 163;
 
 const cacheName = `web-app-cache-${version}`;
 
