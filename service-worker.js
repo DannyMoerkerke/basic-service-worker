@@ -3,12 +3,13 @@ const staticFiles = [
   '/sw-registration.js',
   '/index.js',
   '/index.html',
+  '/about/index.html',
   '/manifest.json',
   '/about.js',
 ];
 const routes = [
-  '/',
-  '/about',
+  // '/',
+  // '/about',
 ]
 const filesToCache = [
   ...routes,
@@ -17,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 156;
+const version = 157;
 
 const cacheName = `web-app-cache-${version}`;
 
