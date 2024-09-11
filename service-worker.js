@@ -1,9 +1,10 @@
 const buildFiles = [];
 const staticFiles = [
-  'sw-registration.js',
-  'index.js',
-  'index.html',
-  'manifest.json',
+  '/sw-registration.js',
+  '/index.js',
+  '/index.html',
+  '/manifest.json',
+  '/about.js',
 ];
 const routes = [
   '/',
@@ -16,7 +17,7 @@ const filesToCache = [
 ];
 
 
-const version = 71;
+const version = 154;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -72,7 +73,7 @@ const prepareCachesForUpdate = async () => {
 
       return Promise.all(
         latestCacheOtherEntries
-        .filter(key => !outdatedCacheEntries.includes(key))
+        // .filter(key => !outdatedCacheEntries.includes(key))
         .map(url => outdatedCache.add(url).catch(r => console.error(r))),
       );
     };
@@ -133,10 +134,13 @@ const fetchHandler = async e => {
         return caches.match(indexRequest, {ignoreSearch: true})
       }
 
+      log('fetching from network:', url);
+
       return fetch(e.request);
     })
     .then(response => {
       if(response) {
+        log('response from network:', url, response);
         return response;
       }
 
@@ -173,8 +177,11 @@ const messageHandler = async ({data}) => {
         includeUncontrolled: true,
       });
 
+      log('skip waiting', clients, self.registration);
+
       if(clients.length < 2) {
-        self.skipWaiting();
+        await self.skipWaiting();
+        await self.clients.claim();
       }
 
       break;

@@ -9,19 +9,19 @@ const init = async () => {
     console.log(registration);
   });
 
-  window.addEventListener('beforeunload', (e) => {
-    console.log('beforeunload', e);
-    localStorage.setItem('beforeunload', getTime());
-  });
-
-  window.addEventListener('pagehide', (e) => {
-    console.log('pagehide', e);
-    localStorage.setItem('pagehide', getTime());
-  });
-
-  document.addEventListener('visibilitychange', () => {
-    localStorage.setItem(document.visibilityState, getTime());
-  })
+  // window.addEventListener('beforeunload', (e) => {
+  //   console.log('beforeunload', e);
+  //   localStorage.setItem('beforeunload', getTime());
+  // });
+  //
+  // window.addEventListener('pagehide', (e) => {
+  //   console.log('pagehide', e);
+  //   localStorage.setItem('pagehide', getTime());
+  // });
+  //
+  // document.addEventListener('visibilitychange', () => {
+  //   localStorage.setItem(document.visibilityState, getTime());
+  // })
 }
 
 init();
