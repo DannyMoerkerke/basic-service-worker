@@ -2,7 +2,7 @@
   "name": "Basic Service Worker",
   "short_name": "Basic SW",
   "id": "basic-service-worker",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
