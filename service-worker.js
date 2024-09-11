@@ -5,7 +5,6 @@ const staticFiles = [
   '/index.html',
   '/about/index.html',
   '/manifest.json',
-  '/about.js',
 ];
 const routes = [
   // '/',
@@ -18,7 +17,7 @@ const filesToCache = [
 ];
 
 
-const version = 161;
+const version = 162;
 
 const cacheName = `web-app-cache-${version}`;
 
