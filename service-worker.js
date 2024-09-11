@@ -18,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 157;
+const version = 160;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -91,7 +91,12 @@ const installHandler = e => {
     })
     .then(clients => {
       caches.open(cacheName)
-      .then(cache => cache.addAll(filesToCache.map(file => new Request(file, {cache: 'no-cache'}))))
+      // .then(cache => cache.addAll(filesToCache.map(file => new Request(file, {cache: 'no-cache'}))))
+      .then((cache) => {
+        filesToCache.map(file => {
+          cache.add(new Request(file, {cache: 'no-cache'}))
+        })
+      })
     })
     .catch(err => console.error('cache error', err))
   );
