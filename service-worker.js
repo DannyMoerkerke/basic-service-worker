@@ -18,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 174;
+const version = 175;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -40,22 +40,22 @@ const prepareCachesForUpdate = async () => {
     return null;
   }
 
-  // console.log('latestCacheName', latestCacheName);
-  // console.log('outdatedCacheNames', outdatedCacheNames);
+  console.log('latestCacheName', latestCacheName);
+  console.log('outdatedCacheNames', outdatedCacheNames);
 
   const latestCache = await caches.open(latestCacheName);
 
-  // console.log('latestCache', latestCache);
+  console.log('latestCache', latestCache);
 
   const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
 
-  // console.log('latestCacheEntries', await latestCache?.keys());
+  console.log('latestCacheEntries', await latestCache?.keys());
 
   const latestCacheIndexEntry = latestCacheEntries?.find(url => {
-    // console.log('entry', url, new URL(url));
+    console.log('entry', url, new URL(url));
     return new URL(url).pathname === '/';
   });
-  // console.log('latestCacheIndexEntry', latestCacheIndexEntry);
+  console.log('latestCacheIndexEntry', latestCacheIndexEntry);
 
   const latestCacheIndexResponse = latestCacheIndexEntry ? await latestCache.match(latestCacheIndexEntry) : null;
 
@@ -68,7 +68,7 @@ const prepareCachesForUpdate = async () => {
       const outdatedCacheIndexEntry = outdatedCacheEntries?.find(url => new URL(url).pathname === '/');
 
       if(outdatedCacheIndexEntry && latestCacheIndexResponse) {
-        // console.log('put new version of the index.html in the cache', outdatedCacheName);
+        console.log('put new version of the index.html in the cache', outdatedCacheName);
         await outdatedCache.put(outdatedCacheIndexEntry, latestCacheIndexResponse.clone());
       }
 
