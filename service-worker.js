@@ -18,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 168;
+const version = 169;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -119,6 +119,16 @@ const activateHandler = e => {
   );
 };
 
+const cleanRedirect =  async (response) => {
+  const clonedResponse = response.clone();
+
+  return new Response(clonedResponse.body, {
+    headers: clonedResponse.headers,
+    status: clonedResponse.status,
+    statusText: clonedResponse.statusText,
+  });
+}
+
 const fetchHandler = async e => {
   const {request} = e;
   const {url, method, headers, mode, credentials, cache} = request;
@@ -131,10 +141,7 @@ const fetchHandler = async e => {
       if(response) {
         log('from cache', url);
 
-        if(url === 'https://localhost:9000/?source=pwa') {
-          log('response from cache', await response.clone().text());
-        }
-        return response;
+        return response.redirected ? cleanRedirect(response) : response;
       }
 
       if(url.startsWith(location.origin) && !url.match(/\.[a-zA-Z]{2,4}$/)) {
