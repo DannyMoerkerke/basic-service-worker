@@ -8,6 +8,7 @@ window.addEventListener('load', async () => {
       if(newServiceWorkerWaiting) {
         console.log('new sw waiting');
         window.swUpdate = true;
+        SWHelper.skipWaiting();
       }
 
       registration.onupdatefound = () => {
@@ -57,9 +58,9 @@ window.addEventListener('load', async () => {
       }
     };
 
-    const updateServiceWorkerIfNeeded = async () => {
+    const updateServiceWorkerIfNeeded = async (e) => {
       if(window.swUpdate) {
-        console.log('send skipWaiting');
+        console.log('send skipWaiting', e);
 
         // set swUpdate to false to avoid multiple calls to skipWaiting which can cause the service worker
         // to stay in the waiting state

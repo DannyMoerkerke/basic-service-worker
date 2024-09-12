@@ -18,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 175;
+const version = 188;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -82,6 +82,28 @@ const prepareCachesForUpdate = async () => {
   });
 
   return Promise.all(promises);
+};
+
+const updateLastCache = async () => {
+  const {latestCacheName, outdatedCacheNames} = await getCacheStorageNames();
+  if(!latestCacheName || !outdatedCacheNames?.length) {
+    return null;
+  }
+
+  console.log('latestCacheName', latestCacheName);
+  console.log('outdatedCacheNames', outdatedCacheNames);
+
+  const latestCache = await caches.open(latestCacheName);
+  const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
+
+  for(const outdatedCacheName of outdatedCacheNames) {
+    const outdatedCache = await caches.open(outdatedCacheName);
+
+    for(const entry of latestCacheEntries) {
+      const latestCacheResponse = await latestCache.match(entry);
+      await outdatedCache.put(entry, latestCacheResponse.clone());
+    }
+  }
 };
 
 const installHandler = e => {
@@ -206,7 +228,8 @@ const messageHandler = async ({data}) => {
       break;
 
     case 'PREPARE_CACHES_FOR_UPDATE':
-      await prepareCachesForUpdate();
+      // await prepareCachesForUpdate();
+      await updateLastCache();
 
       break;
   }
