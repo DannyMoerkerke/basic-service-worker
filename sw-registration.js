@@ -27,7 +27,7 @@ window.addEventListener('load', async () => {
             // current one, the new version will be served immediately. At the same time, this navigation or reload will
             // cause the waiting service worker to be activated.
             await SWHelper.prepareCachesForUpdate();
-            }, 250)
+            }, 500)
           }
         };
       }
