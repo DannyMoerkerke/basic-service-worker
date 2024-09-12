@@ -9,6 +9,7 @@ const staticFiles = [
 const routes = [
   '/',
   '/about',
+  '/about/'
 ]
 const filesToCache = [
   ...routes,
@@ -17,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 167;
+const version = 168;
 
 const cacheName = `web-app-cache-${version}`;
 
