@@ -18,7 +18,7 @@ const filesToCache = [
 ];
 
 
-const version = 192;
+const version = 193;
 
 const cacheName = `web-app-cache-${version}`;
 
@@ -95,6 +95,8 @@ const updateLastCache = async () => {
 
   const latestCache = await caches.open(latestCacheName);
   const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
+
+  console.log('latestCacheEntries', latestCacheEntries);
 
   for(const outdatedCacheName of outdatedCacheNames) {
     const outdatedCache = await caches.open(outdatedCacheName);
