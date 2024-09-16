@@ -1,31 +1,33 @@
-const buildFiles = [];
+// service worker version number
+const SW_VERSION = 1;
+
+// cache name including version number
+const cacheName = `web-app-cache-${SW_VERSION}`;
+
+// static files to cache
 const staticFiles = [
   '/sw-registration.js',
-  '/index.js',
   '/index.html',
   '/about/index.html',
   '/manifest.json',
+  '/offline.html',
+  '/src/img/icons/manifest-icon-192.maskable.png',
+  '/src/img/icons/manifest-icon-512.maskable.png',
 ];
+
+// routes to cache
 const routes = [
   '/',
   '/about',
-  '/about/'
 ]
+
+// combine static files and routes to cache
 const filesToCache = [
   ...routes,
-  ...buildFiles,
   ...staticFiles,
 ];
 
-
-const version = 204;
-
-const cacheName = `web-app-cache-${version}`;
-
-const debug = true;
-
-const log = debug ? console.log.bind(console) : () => {};
-
+// get the names of the caches of the current Service Worker and any outdated ones
 const getCacheStorageNames = async () => {
   const cacheNames = await caches.keys() || [];
   const outdatedCacheNames = cacheNames.filter(name => !name.includes(cacheName));
@@ -34,94 +36,40 @@ const getCacheStorageNames = async () => {
   return {latestCacheName, outdatedCacheNames};
 };
 
-const prepareCachesForUpdate = async () => {
-  const {latestCacheName, outdatedCacheNames} = await getCacheStorageNames();
-  if(!latestCacheName || !outdatedCacheNames?.length) {
-    return null;
-  }
 
-  console.log('latestCacheName', latestCacheName);
-  console.log('outdatedCacheNames', outdatedCacheNames);
-
-  const latestCache = await caches.open(latestCacheName);
-
-  console.log('latestCache', latestCache);
-
-  const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
-
-  console.log('latestCacheEntries', await latestCache?.keys());
-
-  const latestCacheIndexEntry = latestCacheEntries?.find(url => {
-    console.log('entry', url, new URL(url));
-    return new URL(url).pathname === '/';
-  });
-  console.log('latestCacheIndexEntry', latestCacheIndexEntry);
-
-  const latestCacheIndexResponse = latestCacheIndexEntry ? await latestCache.match(latestCacheIndexEntry) : null;
-
-  const latestCacheOtherEntries = latestCacheEntries.filter(url => url !== latestCacheIndexEntry) || [];
-
-  const promises = outdatedCacheNames.map(outdatedCacheName => {
-    const updateOutdatedCache = async () => {
-      const outdatedCache = await caches.open(outdatedCacheName);
-      const outdatedCacheEntries = (await outdatedCache?.keys())?.map(c => c.url) || [];
-      const outdatedCacheIndexEntry = outdatedCacheEntries?.find(url => new URL(url).pathname === '/');
-
-      if(outdatedCacheIndexEntry && latestCacheIndexResponse) {
-        console.log('put new version of the index.html in the cache', outdatedCacheName);
-        await outdatedCache.put(outdatedCacheIndexEntry, latestCacheIndexResponse.clone());
-      }
-
-      return Promise.all(
-        latestCacheOtherEntries
-        // .filter(key => !outdatedCacheEntries.includes(key))
-        .map(url => outdatedCache.add(url).catch(r => console.error(r))),
-      );
-    };
-    return updateOutdatedCache();
-  });
-
-  return Promise.all(promises);
-};
-
+// update outdated caches with the content of the latest one so new content is served immediately
+// when the Service Worker is updated but it can't serve this new content yet on the first navigation or reload
 const updateLastCache = async () => {
   const {latestCacheName, outdatedCacheNames} = await getCacheStorageNames();
   if(!latestCacheName || !outdatedCacheNames?.length) {
     return null;
   }
 
-  console.log('latestCacheName', latestCacheName);
-  console.log('outdatedCacheNames', outdatedCacheNames);
-
   const latestCache = await caches.open(latestCacheName);
   const latestCacheEntries = (await latestCache?.keys())?.map(c => c.url) || [];
-
-  console.log('latestCacheEntries', await latestCache?.keys());
 
   for(const outdatedCacheName of outdatedCacheNames) {
     const outdatedCache = await caches.open(outdatedCacheName);
 
     for(const entry of latestCacheEntries) {
       const latestCacheResponse = await latestCache.match(entry);
-      console.log('to outdated cache', entry, latestCacheResponse);
+
       await outdatedCache.put(entry, latestCacheResponse.clone());
     }
   }
 };
 
+// cache all files and routes when the Service Worker is installed
+// add {cache: 'no-cache'} } to all requests to bypass the browser cache so content is always fetched from the server
 const installHandler = e => {
   e.waitUntil(
-    self.clients.matchAll({
-      includeUncontrolled: true,
-    })
-    .then(clients => {
-      caches.open(cacheName)
-      .then(cache => cache.addAll(filesToCache.map(file => new Request(file, {cache: 'no-cache'}))))
-    })
+    caches.open(cacheName)
+    .then(cache => cache.addAll(filesToCache.map(file => new Request(file, {cache: 'no-cache'}))))
     .catch(err => console.error('cache error', err))
   );
 };
 
+// delete any outdated caches when the Service Worker is activated
 const activateHandler = e => {
   e.waitUntil(
     caches.keys()
@@ -133,6 +81,8 @@ const activateHandler = e => {
   );
 };
 
+// in case the caches response is a redirect, we need to clone it to set its "redirected" property to false
+// otherwise the Service Worker will throw an error since this is a security restriction
 const cleanRedirect =  async (response) => {
   const clonedResponse = response.clone();
 
@@ -143,64 +93,40 @@ const cleanRedirect =  async (response) => {
   });
 }
 
+// the fetch event handler for the Service Worker that is invoked for each request
 const fetchHandler = async e => {
   const {request} = e;
-  const {url, method, headers, mode, credentials, cache} = request;
-
-  log('[Service Worker] Fetch', url, request.method);
+  const {url} = request;
 
   e.respondWith(
-    caches.match(request, {ignoreVary: true, ignoreSearch: true})
-    .then(async response => {
-      if(response) {
-        log('from cache', url);
+    (async () => {
+      try {
+        // try to get the response from the cache
+        const response = await caches.match(request, {ignoreVary: true, ignoreSearch: true});
+        if (response) {
+          return response.redirected ? cleanRedirect(response) : response;
+        }
 
-        return response.redirected ? cleanRedirect(response) : response;
+        // if not in the cache, try to fetch the response from the network
+        const fetchResponse = await fetch(e.request);
+        if (fetchResponse) {
+          return fetchResponse;
+        }
       }
-
-      if(url.startsWith(location.origin) && !url.match(/\.[a-zA-Z]{2,4}$/)) {
-        const indexUrl = url.endsWith('/') ? `${url}index.html` : `${url}/index.html`;
-
-        log('trying index request:', indexUrl);
-
-        const indexRequest = new Request(indexUrl, {method, headers, credentials, cache});
-        return caches.match(indexRequest, {ignoreSearch: true})
+      catch (err) {
+        // a fetch error occurred, serve the offline page since we don't have a cached response
+        const offlineResponse = await caches.match('/offline.html');
+        if (offlineResponse) {
+          return offlineResponse;
+        }
       }
-
-      log('fetching from network:', url);
-
-      return fetch(e.request);
-    })
-    .then(response => {
-      if(response) {
-        log('response from network:', url, response);
-        return response;
-      }
-
-      console.log('no response for url:', url);
-      return fetch(e.request);
-    })
-    .catch(err => console.error('fetch error:', 'url:', url, 'error:', err))
+    })()
   );
 
 };
 
-const getClients = async () => await self.clients.matchAll({
-  includeUncontrolled: true,
-});
 
-const hasActiveClients = async () => {
-  const clients = await getClients();
-
-  return clients.some(({visibilityState}) => visibilityState === 'visible');
-};
-
-const sendMessage = async message => {
-  const clients = await getClients();
-
-  clients.forEach((client) => client.postMessage({type: 'message', message}));
-}
-
+// message handler for communication between the main thread and the Service Worker through postMessage
 const messageHandler = async ({data}) => {
   const {type} = data;
 
@@ -210,8 +136,7 @@ const messageHandler = async ({data}) => {
         includeUncontrolled: true,
       });
 
-      log('skip waiting', clients, self.registration);
-
+      // if the Service Worker is serving 1 client at most, it can be safely skip waiting to update immediately
       if(clients.length < 2) {
         await self.skipWaiting();
         await self.clients.claim();
@@ -219,8 +144,9 @@ const messageHandler = async ({data}) => {
 
       break;
 
+    // move the files of the new cache to the old one so when the user navigates to another page or reloads the
+    // current one, the new content will be served immediately
     case 'PREPARE_CACHES_FOR_UPDATE':
-      // await prepareCachesForUpdate();
       await updateLastCache();
 
       break;

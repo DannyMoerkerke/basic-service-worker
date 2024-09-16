@@ -24,7 +24,7 @@
     "app"
   ],
   "author": "Danny Moerkerke <danny@dannymoerkerke.nl>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/DannyMoerkerke/basic-service-worker/issues"
   },

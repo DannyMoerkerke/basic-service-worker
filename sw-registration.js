@@ -3,36 +3,41 @@ window.addEventListener('load', async () => {
     const registerServiceWorker = async () => {
       await navigator.serviceWorker.register('/service-worker.js');
       const registration = await navigator.serviceWorker.ready;
-      const newServiceWorkerWaiting = registration.waiting && registration.active
+      const newServiceWorkerWaiting = registration.waiting && registration.active;
 
+      // if there is already a new Service Worker waiting when the page is loaded, skip waiting to update immediately
       if(newServiceWorkerWaiting) {
         console.log('new sw waiting');
         window.swUpdate = true;
-        SWHelper.skipWaiting();
+        await SWHelper.skipWaiting();
       }
 
-      registration.onupdatefound = () => {
+      // listen for service worker updates
+      registration.addEventListener('updatefound', () => {
         const installingWorker = registration.installing;
 
-      if(installingWorker) {
-        console.log('installing sw found');
-        installingWorker.onstatechange = async () => {
-          if(installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            console.log('new sw installed');
-            window.swUpdate = true;
+        // installing Service Worker found
+        if(installingWorker) {
+          console.log('installing sw found');
+          installingWorker.addEventListener('statechange', async () => {
+            // the new Service Worker is installed and waiting to be activated
+            // the outdated caches can be updated and the Service Worker will be activated on the next navigation or reload
+            if(installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('new sw installed');
 
-            setTimeout(async () => {
+              window.swUpdate = true;
 
-            // move the files of the new cache to the old one so when the user navigates to another page or reloads the
-            // current one, the new version will be served immediately. At the same time, this navigation or reload will
-            // cause the waiting service worker to be activated.
-            await SWHelper.prepareCachesForUpdate();
-            }, 500)
-          }
-        };
-      }
+              setTimeout(async () => {
 
-      };
+                // move the files of the new cache to the old one so when the user navigates to another page or reloads the
+                // current one, the new version will be served immediately. At the same time, this navigation or reload will
+                // cause the waiting service worker to be activated.
+                await SWHelper.prepareCachesForUpdate();
+              }, 500);
+            }
+          });
+        }
+      });
     };
 
     registerServiceWorker();
@@ -50,11 +55,6 @@ window.addEventListener('load', async () => {
 
       async prepareCachesForUpdate() {
         return (await SWHelper.getWaitingWorker())?.postMessage({type: 'PREPARE_CACHES_FOR_UPDATE'});
-      },
-
-      async checkForUpdates() {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.update();
       }
     };
 
@@ -67,8 +67,13 @@ window.addEventListener('load', async () => {
         window.swUpdate = false;
         await SWHelper.skipWaiting();
       }
-    }
+    };
 
+    // check if the Service Worker needs to be updated on page navigation or reload
+    // beforeunload is reliably triggered on desktop, pagehide is more reliable on mobile and is the only event that is
+    // fired when the user closes the app from the app switcher.
+    // NOTE: on iOS, the pagehide event is only fired when the app is added to the Home Screen and the user closes it
+    // from the app switcher.
     window.addEventListener('beforeunload', updateServiceWorkerIfNeeded);
     document.addEventListener('pagehide', updateServiceWorkerIfNeeded);
   }
