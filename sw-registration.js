@@ -1,8 +1,7 @@
-window.addEventListener('load', async () => {
-  if('serviceWorker' in navigator) {
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
     const registerServiceWorker = async () => {
-      await navigator.serviceWorker.register('/service-worker.js');
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await navigator.serviceWorker.register('/service-worker.js');      
       const newServiceWorkerWaiting = registration.waiting && registration.active;
 
       // if there is already a new Service Worker waiting when the page is loaded, skip waiting to update immediately
@@ -44,7 +43,7 @@ window.addEventListener('load', async () => {
 
     const SWHelper = {
       async getWaitingWorker() {
-        const registrations = await navigator.serviceWorker?.getRegistrations() || [];
+        const registrations = await navigator.serviceWorker.getRegistrations();
         const registrationWithWaiting = registrations.find(reg => reg.waiting);
         return registrationWithWaiting?.waiting;
       },
@@ -76,5 +75,5 @@ window.addEventListener('load', async () => {
     // from the app switcher.
     window.addEventListener('beforeunload', updateServiceWorkerIfNeeded);
     document.addEventListener('pagehide', updateServiceWorkerIfNeeded);
-  }
-});
+  });
+}
