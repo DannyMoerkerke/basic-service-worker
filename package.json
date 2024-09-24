@@ -1,11 +1,13 @@
 {
   "name": "basic-service-worker",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A basic Service Worker to make your web app work offline",
   "main": "service-worker.js",
+  "type": "module",
   "scripts": {
-    "start": "ws -p 9000 --https --key ssl/private-key.pem --cert ssl/localhost-cert.pem",
-    "start:http": "ws -p 9000",
+    "start:webserver": "ws -p 9000 --https --key ssl/private-key.pem --cert ssl/localhost-cert.pem",
+    "start:post-server": "node server.js",
+    "start": "concurrently \"npm run start:webserver\" \"npm run start:post-server\"",
     "private-key": "openssl genrsa -out ssl/private-key.pem 2048",
     "req-cert": "openssl req -new -nodes -sha256 -key ssl/private-key.pem -out ssl/localhost-csr.pem -config ssl/openssl.cnf",
     "sign-cert": "openssl x509 -req -sha256 -days 3650 -in ssl/localhost-csr.pem -signkey ssl/private-key.pem -out ssl/localhost-cert.pem -extfile ssl/openssl.cnf -extensions v3_req",
@@ -17,11 +19,10 @@
     "url": "git+https://github.com/DannyMoerkerke/basic-service-worker.git"
   },
   "keywords": [
-    "service",
-    "worker",
+    "service worker",
     "pwa",
-    "web",
-    "app"
+    "web app",
+    "offline support"
   ],
   "author": "Danny Moerkerke <danny@dannymoerkerke.nl>",
   "license": "MIT",
@@ -30,6 +31,8 @@
   },
   "homepage": "https://github.com/DannyMoerkerke/basic-service-worker#readme",
   "devDependencies": {
+    "concurrently": "^9.0.1",
+    "express": "^4.21.0",
     "local-web-server": "^5.4.0"
   }
 }

@@ -13,7 +13,19 @@
       <p>
         <a href="/about">About</a>
       </p>
+      <p>
+        <button id="post-button">Send POST request</button>
+      </p>
     </main>
     <script src="/sw-registration.js"></script>
+    <script>
+      const postButton = document.querySelector('#post-button');
+      postButton.addEventListener('click', () => {
+        fetch('https://localhost:3000/post', {
+          method: 'POST',
+          body: JSON.stringify({})
+        });
+      })
+    </script>
   </body>
 </html>

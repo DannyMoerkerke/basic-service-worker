@@ -1,7 +1,8 @@
 # Basic Service Worker
 
 This is a basic Service Worker that you can use to make your web app work offline. It does so by caching all static 
-assets and responses for routes in your web app.
+assets and responses for routes in your web app, and storing POST, PUT and DELETE requests in IndexedDB that are made 
+when the app is offline which can be retried when the app is back online.
 
 ## How it works
 
@@ -13,7 +14,8 @@ Service Worker matches any request against its cache and can then serve the resp
 It can also cache responses to API calls or save outgoing requests while the web app is offline and then send them when 
 the app is back online.
 
-This basic version takes care of caching all assets locally and providing responses for the routes you provide.
+This basic version takes care of caching all assets locally, providing responses for the routes you provide and storing 
+POST requests while the app is offline which are retried when the app is back online.
 
 ### Usage
 
@@ -64,6 +66,14 @@ example, the Service Worker adds the HTML responses for `/` and `/about` to the 
 
 **Make sure that your Service Worker does not throw any error when it's loaded, otherwise it will not work!**
 
+### Storing requests while offline
+The Service Worker stores all POST, PUT, DELETE and other explicitly listed requests that are made while the app is 
+offline and retries these when the app is back online. You can adapt this to your own needs in the `isRequestEligibleForRetry` function. 
+
+In supporting browsers, it uses the Background Sync API and in other browsers it posts a message to the Service Worker 
+when the app comes back online. The latter offers less granular control than the Background Sync API but suffices for 
+this demo.
+
 ### Updating the Service Worker
 A Service Worker is considered updated if it's byte-different from the previous version. This means that any change will 
 do, but it's good practice to add a version number to your Service Worker and increment this number any time you make a 
@@ -110,6 +120,38 @@ For Windows, refer to [this link](https://aboutssl.org/installing-self-signed-ca
 
 Run `npm install` to install the local web server, then `npm start` and then the demo will be served at 
 https://localhost:9000/
+
+### Testing retry requests
+In supporting browsers like Chrome and Edge, the Service Worker will use the Background Sync API to retry any stored 
+requests. This works by registering a sync event for the stored requests that will be fired when the app comes back 
+online.
+
+You can monitor these sync events in the Application tab of Chrome devtools. Scroll down to Background Services and 
+then click Background Sync. Then click the record button to start recording activity:
+
+![Background Sync in devtools](./src/img/background-sync-monitoring.png)
+
+Recording sync events is now active:
+
+![Background Sync recording in devtools](./src/img/background-sync-monitoring-recording.png)
+
+Then disconnect your device from the network. *Note that the POST request is made to localhost as well so checking the 
+"offline" checkbox for the Service Worker in the Application panel of devtools is not sufficient.*
+
+Click the "Send POST request" button while offline. If you now check the "request-store" store in the Application tab 
+under Storage > IndexedDB, you will see the stored request (you may need to click the refresh icon):
+
+![Stored request in IndexedDB](./src/img/stored-request.png)
+
+If you check Background Sync in the Application tab under Background Services, you will now see the registered sync 
+event:
+
+![Registered sync event](./src/img/registered-sync.png)
+
+Now go back online and after the network is back, check Background Sync in the Application tab under Background 
+Services again. You should now see that the sync event was dispatched and completed:
+
+![Sync event completed](./src/img/completed-sync.png)
 
 ## Motivation
 

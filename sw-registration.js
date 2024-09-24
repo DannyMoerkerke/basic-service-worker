@@ -1,7 +1,7 @@
 if('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     const registerServiceWorker = async () => {
-      const registration = await navigator.serviceWorker.register('/service-worker.js');      
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
       const newServiceWorkerWaiting = registration.waiting && registration.active;
 
       // if there is already a new Service Worker waiting when the page is loaded, skip waiting to update immediately
@@ -59,8 +59,6 @@ if('serviceWorker' in navigator) {
 
     const updateServiceWorkerIfNeeded = async (e) => {
       if(window.swUpdate) {
-        console.log('send skipWaiting', e);
-
         // set swUpdate to false to avoid multiple calls to skipWaiting which can cause the service worker
         // to stay in the waiting state
         window.swUpdate = false;
@@ -75,5 +73,12 @@ if('serviceWorker' in navigator) {
     // from the app switcher.
     window.addEventListener('beforeunload', updateServiceWorkerIfNeeded);
     document.addEventListener('pagehide', updateServiceWorkerIfNeeded);
+
+    // send a message to the Service Worker to retry any requests that were stored
+    // when the user was offline
+    // in browsers that support Background Sync, this will be handled by the Sync event
+    window.addEventListener('online', () => {
+      navigator.serviceWorker.controller.postMessage({type: 'retry-requests'});
+    })
   });
 }
