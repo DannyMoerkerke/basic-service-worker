@@ -149,7 +149,8 @@ event:
 ![Registered sync event](./src/img/registered-sync.png)
 
 Now go back online and after the network is back, check Background Sync in the Application tab under Background 
-Services again. You should now see that the sync event was dispatched and completed:
+Services again. You should now see that the sync event was dispatched and completed and the request should be 
+successfully retried:
 
 ![Sync event completed](./src/img/completed-sync.png)
 
