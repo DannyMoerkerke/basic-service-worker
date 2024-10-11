@@ -196,10 +196,10 @@ const getRequests = async () => {
 // retry failed requests that were stored in IndexedDB when the app was offline
 const retryRequests = async () => {
   const reqs = await getRequests();
-  const requests = reqs.map(({url, method, headers: serializedHeaders, mode, credentials}) => {
+  const requests = reqs.map(({url, method, headers: serializedHeaders, body, mode, credentials}) => {
     const headers = new Headers(serializedHeaders);
 
-    return fetch(url, {method, headers, mode, credentials});
+    return fetch(url, {method, headers, body, mode, credentials});
   });
 
   const responses = await Promise.allSettled(requests);
