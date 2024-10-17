@@ -1,5 +1,5 @@
 // service worker version number
-const SW_VERSION = 2;
+const SW_VERSION = 3;
 
 // cache name including version number
 const cacheName = `web-app-cache-${SW_VERSION}`;
