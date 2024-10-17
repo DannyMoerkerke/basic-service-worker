@@ -80,5 +80,19 @@ if('serviceWorker' in navigator) {
     window.addEventListener('online', () => {
       navigator.serviceWorker.controller.postMessage({type: 'retry-requests'});
     })
+
   });
+  
+  const getTime = () => `${new Date().toTimeString().split(' ').shift()} - ${Date.now()}`;
+
+
+  document.addEventListener('visibilitychange', () => {
+    localStorage.setItem(`visibilitychange: ${document.visibilityState}`, getTime());
+  });
+  
+  (['beforeunload', 'pageshow', 'pagehide', 'pagereveal', 'pageswap', 'freeze', 'resume']).forEach(event => {
+      window.addEventListener(event, () => {
+        localStorage.setItem(event, getTime());
+      });
+    });
 }
