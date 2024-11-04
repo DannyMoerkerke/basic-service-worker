@@ -66,6 +66,8 @@ if('serviceWorker' in navigator) {
       }
     };
 
+    const retryRequests = () => navigator.serviceWorker.controller.postMessage({type: 'retry-requests'});
+
     // check if the Service Worker needs to be updated on page navigation or reload
     // beforeunload is reliably triggered on desktop, pagehide is more reliable on mobile and is the only event that is
     // fired when the user closes the app from the app switcher.
@@ -77,22 +79,13 @@ if('serviceWorker' in navigator) {
     // send a message to the Service Worker to retry any requests that were stored
     // when the user was offline
     // in browsers that support Background Sync, this will be handled by the Sync event
-    window.addEventListener('online', () => {
-      navigator.serviceWorker.controller.postMessage({type: 'retry-requests'});
-    })
+    window.addEventListener('online', retryRequests);
 
+    // retry any requests that were stored in IndexedDB when the app was offline
+    // we need to run this function when the page is loaded otherwise it will only be triggered when the app
+    // comes back online
+    // if the app is closed while offline and reopened when online, the online event will not be triggered,
+    // so we need to manually call this function
+    retryRequests();
   });
-  
-  const getTime = () => `${new Date().toTimeString().split(' ').shift()} - ${Date.now()}`;
-
-
-  document.addEventListener('visibilitychange', () => {
-    localStorage.setItem(`visibilitychange: ${document.visibilityState}`, getTime());
-  });
-  
-  (['beforeunload', 'pageshow', 'pagehide', 'pagereveal', 'pageswap', 'freeze', 'resume']).forEach(event => {
-      window.addEventListener(event, () => {
-        localStorage.setItem(event, getTime());
-      });
-    });
 }

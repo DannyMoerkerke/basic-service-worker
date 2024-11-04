@@ -70,9 +70,11 @@ example, the Service Worker adds the HTML responses for `/` and `/about` to the 
 The Service Worker stores all POST, PUT, DELETE and other explicitly listed requests that are made while the app is 
 offline and retries these when the app is back online. You can adapt this to your own needs in the `isRequestEligibleForRetry` function. 
 
-In supporting browsers, it uses the Background Sync API and in other browsers it posts a message to the Service Worker 
-when the app comes back online. The latter offers less granular control than the Background Sync API but suffices for 
-this demo.
+In supporting browsers, it uses the Background Sync API to register a sync event that will be fired when the network 
+comes back, even when the app is not running. In other browsers it posts a message to the Service Worker when the app 
+comes back online. This offers less granular control than the Background Sync API and the message 
+will not be sent when the network comes back while the app is not running. This means that any requests that were stored 
+while offline will only be sent when the network comes back and the app is running.
 
 ### Updating the Service Worker
 A Service Worker is considered updated if it's byte-different from the previous version. This means that any change will 
