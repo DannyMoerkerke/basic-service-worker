@@ -1,6 +1,6 @@
 {
   "name": "basic-service-worker",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A basic Service Worker to make your web app work offline",
   "main": "service-worker.js",
   "type": "module",

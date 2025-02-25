@@ -1,5 +1,6 @@
 // service worker version number
-const SW_VERSION = 4;
+const SW_VERSION = 1;
+const IDB_VERSION = 1;
 
 // cache name including version number
 const cacheName = `web-app-cache-${SW_VERSION}`;
@@ -31,7 +32,7 @@ const requestsToRetryWhenOffline = [];
 
 const IDBConfig = {
   name: 'web-app-db',
-  version: SW_VERSION,
+  version: IDB_VERSION,
   stores: {
     requestStore: {
       name: `request-store`,
@@ -75,7 +76,7 @@ const createIndexedDB = ({name, stores}) => {
 const getStoreFactory = (dbName) => ({name}, mode = 'readonly') => {
   return new Promise((resolve, reject) => {
 
-    const request = self.indexedDB.open(dbName, 1);
+    const request = self.indexedDB.open(dbName, IDB_VERSION);
 
     request.onsuccess = e => {
       const db = request.result;
