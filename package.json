@@ -1,11 +1,11 @@
 {
   "name": "basic-service-worker",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A basic Service Worker to make your web app work offline",
   "main": "service-worker.js",
   "type": "module",
   "scripts": {
-    "start:webserver": "ws -p 9000 --https --key ssl/private-key.pem --cert ssl/localhost-cert.pem",
+    "start:webserver": "ws -p 9000 --https --key ssl/private-key.pem --cert ssl/localhost-cert.pem --spa index.html",
     "start:post-server": "node server.js",
     "start": "concurrently \"npm run start:webserver\" \"npm run start:post-server\"",
     "private-key": "openssl genrsa -out ssl/private-key.pem 2048",

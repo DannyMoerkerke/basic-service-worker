@@ -1,5 +1,5 @@
 // service worker version number
-const SW_VERSION = 1;
+const SW_VERSION = 2;
 const IDB_VERSION = 1;
 
 // cache name including version number
@@ -52,7 +52,7 @@ const isRequestEligibleForRetry = ({url, method}) => {
 };
 
 const createIndexedDB = ({name, stores}) => {
-  const request = self.indexedDB.open(name, 1);
+  const request = self.indexedDB.open(name, IDB_VERSION);
 
   return new Promise((resolve, reject) => {
     request.onupgradeneeded = e => {

@@ -14,18 +14,28 @@
         <a href="/about">About</a>
       </p>
       <p>
+        <a href="/spa-route">SPA Route</a>
+      </p>
+      <p>
         <button id="post-button">Send POST request</button>
       </p>
     </main>
     <script src="/sw-registration.js"></script>
-    <script>
+    <script type="module">
       const postButton = document.querySelector('#post-button');
       postButton.addEventListener('click', () => {
         fetch('https://localhost:3000/post', {
           method: 'POST',
           body: JSON.stringify({})
         });
-      })
+      });
+
+      if(location.href.endsWith('/spa-route')) {
+        import('./src/js/spa-route.js')
+        .then(({template}) => {
+          document.body.innerHTML = template;
+        });
+      }
     </script>
   </body>
 </html>

@@ -123,6 +123,26 @@ For Windows, refer to [this link](https://aboutssl.org/installing-self-signed-ca
 Run `npm install` to install the local web server, then `npm start` and then the demo will be served at 
 https://localhost:9000/
 
+### Testing service worker updates
+In Chrome dev tools, in the Application tab, click Service workers in the left menu. Here you will see the current active 
+service worker and its status:
+
+![Service Worker status in devtools](./src/img/waiting-sw.png)
+
+Whenever there's an installing service worker or an already installed service worker that's waiting to activate, it 
+will be listed under the active one. Navigate to another page when the service worker is installed and waiting, and you 
+should see that the newly installed service worker is activated. Make sure you only have one tab or window open with 
+this demo, otherwise it won't work. This is to prevent leaving other tabs or windows in an inconsistent state.
+
+When you navigate to the SPA route `/spa-route`, the page will normally not be reloaded, but when there is a 
+new Service Worker waiting to be activated, the page will be reloaded instead of partially updated to make sure that the 
+newly installed Service Worker is activated.
+
+**This may not always be the behavior you want. In that case, remove the event handler for the `navigate` event in 
+`sw-registration.js`.**
+
+In the rare event that the Service Worker is not updated, you can navigate to another page or refresh the page.
+
 ### Testing retry requests
 In supporting browsers like Chrome and Edge, the Service Worker will use the Background Sync API to retry any stored 
 requests. This works by registering a sync event for the stored requests that will be fired when the app comes back 
